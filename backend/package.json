@@ -1,0 +1,15 @@
+{
+  "name": "omnix",
+  "version": "1.0.0",
+  "description": "The ultimate AI chat framework for Node.js. Simple to configure, powerful in execution. Build, deploy, and scale your AI-driven chat interfaces with OMNIX's streamlined API.",
+  "keywords": [
+    "ai"
+  ],
+  "license": "MIT",
+  "author": "Muhammad Arham",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
