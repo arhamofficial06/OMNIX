@@ -3,13 +3,35 @@
   "version": "1.0.0",
   "description": "The ultimate AI chat framework for Node.js. Simple to configure, powerful in execution. Build, deploy, and scale your AI-driven chat interfaces with OMNIX's streamlined API.",
   "keywords": [
-    "ai"
+    "omnix",
+    "ai",
+    "chatbot",
+    "chat-board",
+    "llm",
+    "nlp",
+    "generative-ai",
+    "conversational-interface",
+    "node-js",
+    "ai-assistant",
+    "chat-widget",
+    "interactive-ai"
   ],
   "license": "MIT",
   "author": "Muhammad Arham",
-  "type": "commonjs",
+  "type": "module",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.4.1",
+    "morgan": "^1.10.1"
   }
 }
