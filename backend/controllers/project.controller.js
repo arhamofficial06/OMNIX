@@ -21,3 +21,9 @@ export const createProject = async (req, res) => {
     res.status(400).send(error.message);
   }
 };
+
+export const getAllProject = async (req, res) => {
+  try {} catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
