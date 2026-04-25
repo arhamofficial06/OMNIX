@@ -1,28 +1,62 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { axiosInstance } from "../../config";
 
 const Project = () => {
   const location = useLocation();
 
-  console.log(location);
-
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState(new Set());
+  const [users, setUsers] = useState([]);
+  const [project, setProject] = useState(location.state.project);
 
-  // Mock users data - replace with API call later
-  const users = [
-    { id: 1, name: "Ali Khan", email: "ali@gmail.com" },
-    { id: 2, name: "Fatima Ahmed", email: "fatima@gmail.com" },
-    { id: 3, name: "Hassan Ahmed", email: "hassan@gmail.com" },
-    { id: 4, name: "Zainab Ali", email: "zainab@gmail.com" },
-    { id: 5, name: "Omar Malik", email: "omar@gmail.com" },
-    { id: 6, name: "Amira Khan", email: "amira@gmail.com" },
-  ];
+  const selectedUserIdArray = Array.from(selectedUserId);
 
   const handleSelectUser = (userId) => {
-    setSelectedUserId([...selectedUserId, userId]);
+    setSelectedUserId((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(userId)) {
+        newSet.delete(userId);
+      } else {
+        newSet.add(userId);
+      }
+      return newSet;
+    });
   };
+
+  function addCollaborators() {
+    axiosInstance
+      .put("/projects/add-user", {
+        projectId: location.state.project._id,
+        users: selectedUserIdArray,
+      })
+      .then((res) => {
+        console.log(res.data);
+        setIsUserModalOpen(false);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  useEffect(() => {
+    axiosInstance
+      .get(`/projects/get-project/${location.state.project._id}`)
+      .then((res) => {
+        console.log(res.data.project);
+        setProject(res.data.project);
+      });
+
+    axiosInstance
+      .get("/users/all")
+      .then((res) => {
+        setUsers(res.data.users);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
 
   return (
     <main className="h-screen w-screen flex">
@@ -70,6 +104,7 @@ const Project = () => {
           className={`sidePanel w-full h-full flex flex-col gap-2 bg-slate-50 absolute transition-all ${isSidePanelOpen ? "translate-x-0" : "-translate-x-full"} top-0`}
         >
           <header className="flex justify-between items-center px-4 p-2 bg-slate-200">
+            <h1 className="font-semibold text-lg">Collaborators</h1>
             <button
               onClick={() => setIsSidePanelOpen(!isSidePanelOpen)}
               className="p-2 cursor-pointer"
@@ -79,12 +114,17 @@ const Project = () => {
           </header>
 
           <div className="users flex flex-col gap-2">
-            <div className="user cursor-pointer hover:bg-slate-200 p-2 flex items-center gap-2">
-              <div className="aspect-square rounded-full w-fit h-fit flex items-center justify-center p-5 text-white bg-slate-600">
-                <i className="ri-user-fill absolute"></i>
-              </div>
-              <h1 className="font-semibold text-lg">username</h1>
-            </div>
+            {project.users &&
+              project.users.map((user) => {
+                return (
+                  <div className="user cursor-pointer hover:bg-slate-200 p-2 flex items-center gap-2">
+                    <div className="aspect-square rounded-full w-fit h-fit flex items-center justify-center p-5 text-white bg-slate-600">
+                      <i className="ri-user-fill absolute"></i>
+                    </div>
+                    <h1 className="font-semibold text-lg">{user.email}</h1>
+                  </div>
+                );
+              })}
           </div>
         </div>
       </section>
@@ -112,38 +152,24 @@ const Project = () => {
               <div className="space-y-2 sm:space-y-3">
                 {users.map((user) => (
                   <div
-                    key={user.id}
-                    onClick={() => handleSelectUser(user.id)}
+                    key={user._id}
+                    onClick={() => handleSelectUser(user._id)}
                     className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all border-2 ${
-                      selectedUserId === user.id
+                      selectedUserIdArray.includes(user._id)
                         ? "bg-blue-50 border-blue-500"
                         : "bg-slate-50 border-slate-200 hover:border-blue-300 hover:bg-blue-50"
                     }`}
                   >
                     <div className="flex items-center gap-3 sm:gap-4">
-                      {/* User Avatar */}
-                      <div
-                        className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm sm:text-base ${
-                          selectedUserId === user.id
-                            ? "bg-blue-500"
-                            : "bg-slate-600"
-                        }`}
-                      >
-                        {user.name.charAt(0)}
-                      </div>
-
                       {/* User Info */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-slate-900 text-sm sm:text-base truncate">
-                          {user.name}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-slate-500 truncate">
-                          {user.email}
+                        <p className="text-xs sm:text-sm text-slate-900 font-semibold truncate">
+                          {user?.email || "No email"}
                         </p>
                       </div>
 
                       {/* Checkmark for Selected User */}
-                      {selectedUserId === user.id && (
+                      {selectedUserIdArray.includes(user._id) && (
                         <div className="shrink-0 w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 rounded-full flex items-center justify-center">
                           <i className="ri-check-line text-white text-sm"></i>
                         </div>
@@ -156,7 +182,10 @@ const Project = () => {
 
             {/* Modal Footer */}
             <div className="flex gap-3 p-4 sm:p-6 border-t border-slate-200 bg-slate-50">
-              <button className="w-full px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-medium text-sm sm:text-base">
+              <button
+                onClick={addCollaborators}
+                className="w-full px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-medium text-sm sm:text-base"
+              >
                 Add Collaborators
               </button>
             </div>
