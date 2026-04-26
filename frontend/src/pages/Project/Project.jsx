@@ -1,6 +1,12 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { axiosInstance } from "../../config";
+import {
+  axiosInstance,
+  initializeSocket,
+  receiveMessage,
+  sendMessage,
+} from "../../config";
+import { UserContext } from "../../context/user.context";
 
 const Project = () => {
   const location = useLocation();
@@ -10,6 +16,9 @@ const Project = () => {
   const [selectedUserId, setSelectedUserId] = useState(new Set());
   const [users, setUsers] = useState([]);
   const [project, setProject] = useState(location.state.project);
+  const [message, setMessage] = useState("");
+
+  const { user } = useContext(UserContext);
 
   const selectedUserIdArray = Array.from(selectedUserId);
 
@@ -40,7 +49,23 @@ const Project = () => {
       });
   }
 
+  const send = () => {
+    console.log(user)
+    sendMessage("project-message", {
+      message,
+      sender: user._id,
+    });
+
+    setMessage("");
+  }
+
   useEffect(() => {
+    initializeSocket(project._id);
+
+    receiveMessage("project-message", (data) => {
+      console.log(data);
+    });
+
     axiosInstance
       .get(`/projects/get-project/${location.state.project._id}`)
       .then((res) => {
@@ -90,11 +115,16 @@ const Project = () => {
           </div>
           <div className="inputField w-full flex">
             <input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
               className="p-2 px-4 border-none outline-none bg-white grow"
               type="text"
               placeholder="Type your message here..."
             />
-            <button className="cursor-pointer px-5 bg-slate-950 text-white">
+            <button
+              onClick={send}
+              className="cursor-pointer px-5 bg-slate-950 text-white"
+            >
               <i className="ri-send-plane-fill"></i>
             </button>
           </div>
